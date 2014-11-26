@@ -1,8 +1,7 @@
-
-var fs          = require('fs');
-var framework = require('digipolis-expressjs4');
-var mongoose = framework.mongoose;
-var async       = require('async');
+//Dependencies
+var fs          = require('fs'),
+    framework = require('digipolis-expressjs4'),
+    mongoose = framework.mongoose;
 
 
 /**
@@ -11,19 +10,12 @@ var async       = require('async');
  * @param {Mixed}       The data to load. This parameter accepts either:
  *                          String: Path to a file or directory to load
  *                          Object: Object literal in the form described above
- * @param {Connection}  [db] Optionally, the mongoose connection to use.
- *                          Defaults to mongoose.connection.
  * @param {Function}    Callback
  */
-var load = exports.load = function(data, db, callback) {
-    if (typeof db === 'function') {
-        callback = db;
-        db = mongoose.connection;
-    }
-
+var load = exports.load = function(data, callback) {
     if (typeof data == 'object') {
 
-        loadObject(data, db, callback);
+        loadObject(data, callback);
 
     } else if (typeof data == 'string') {
 
@@ -39,9 +31,9 @@ var load = exports.load = function(data, db, callback) {
             if (err) throw err;
 
             if (stats.isDirectory()) {
-                loadDir(data, db, callback);
+                loadDir(data, callback);
             } else { //File
-                loadFile(data, db, callback);
+                loadFile(data, callback);
             }
         });
 
@@ -61,17 +53,16 @@ var load = exports.load = function(data, db, callback) {
  *                          { user1: {name: 'Alex'}, user2: {name: 'Bob'} }
  *                      or:
  *                          [ {name: 'Alex'}, {name:'Bob'} ]
- * @param {Connection}  The mongoose connection to use
  * @param {Function}    Callback
  */
-function insertCollection(modelName, data, db, callback) {
+function insertCollection(modelName, data, callback) {
     callback = callback || {};
 
     //Counters for managing callbacks
     var tasks = { total: 0, done: 0 };
 
     //Load model
-    var Model = db.model(modelName);
+    var Model = mongoose.model(modelName);
 
     //Clear existing collection
     Model.collection.remove(function(err) {
@@ -114,15 +105,27 @@ function insertCollection(modelName, data, db, callback) {
  *
  * @param {Object}      The data to load, keyed by the Mongoose model name e.g.:
  *                          { User: [{name: 'Alex'}, {name: 'Bob'}] }
- * @param {Connection}  The mongoose connection to use
  * @param {Function}    Callback
  */
-function loadObject(data, db, callback) {
+function loadObject(data, callback) {
     callback = callback || function() {};
-    var iterator = function(modelName, next){
-        insertCollection(modelName, data[modelName], db, next);
-    };
-    async.forEachSeries(Object.keys(data), iterator, callback);
+
+    //Counters for managing callbacks
+    var tasks = { total: 0, done: 0 };
+
+    //Go through each model's data
+    for (var modelName in data) {
+        (function() {
+            tasks.total++;
+
+            insertCollection(modelName, data[modelName], function(err) {
+                if (err) throw(err);
+
+                tasks.done++;
+                if (tasks.done == tasks.total) callback();
+            });
+        })();
+    }
 }
 
 
@@ -132,10 +135,9 @@ function loadObject(data, db, callback) {
  * TODO: Add callback option
  *
  * @param {String}      The full path to the file to load
- * @param {Connection}  The mongoose connection to use
  * @param {Function}    Callback
  */
-function loadFile(file, db, callback) {
+function loadFile(file, callback) {
     callback = callback || function() {};
 
     if (file.substr(0, 1) !== '/') {
@@ -144,7 +146,7 @@ function loadFile(file, db, callback) {
         file = parentPath.join('/') + '/' + file;
     }
 
-    load(require(file), db, callback);
+    load(require(file), callback);
 }
 
 
@@ -154,10 +156,9 @@ function loadFile(file, db, callback) {
  * TODO: Add callback option
  *
  * @param {String}      The directory path to load e.g. 'data/fixtures' or '../data'
- * @param {Connection}  The mongoose connection to use
  * @param {Function}    Callback
  */
-function loadDir(dir, db, callback) {
+function loadDir(dir, callback) {
     callback = callback || function() {};
 
     //Get the absolute dir path if a relative path was given
@@ -167,13 +168,22 @@ function loadDir(dir, db, callback) {
         dir = parentPath.join('/') + '/' + dir;
     }
 
+    //Counters for managing callbacks
+    var tasks = { total: 0, done: 0 };
+
     //Load each file in directory
     fs.readdir(dir, function(err, files){
         if (err) return callback(err);
 
-        var iterator = function(file, next){
-            loadFile(dir + '/' + file, db, next);
-        };
-        async.forEach(files, iterator, callback);
+        tasks.total = files.length;
+
+        files.forEach(function(file) {
+            loadFile(dir + '/' + file, function(err) {
+                if (err) return callback(err);
+
+                tasks.done++;
+                if (tasks.total == tasks.done) callback();
+            });
+        });
     });
 };
