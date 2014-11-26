@@ -21,7 +21,7 @@
   "version": "0.3.0",
   "repository": {
     "type": "git",
-    "url": "http://github.com/powmedia/mongoose-fixtures.git"
+    "url": "https://github.com/ThomasBormans/mongoose-fixtures.git"
   },
   "bugs": {
     "url": "http://github.com/powmedia/mongoose-fixtures/issues"
