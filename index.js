@@ -1,7 +1,8 @@
 //Dependencies
 var fs          = require('fs'),
     framework = require('digipolis-expressjs4'),
-    mongoose = framework.mongoose;
+    mongoose = framework.mongoose,
+    path = require('path');
 
 
 /**
@@ -20,11 +21,12 @@ var load = exports.load = function(data, callback) {
     } else if (typeof data == 'string') {
 
         //Get the absolute dir path if a relative path was given
-        if (data.substr(0, 1) !== '/') {
-            var parentPath = module.parent.filename.split('/');
-            parentPath.pop();
-            data = parentPath.join('/') + '/' + data;
-        }
+        // if (data.substr(0, 1) !== '/') {
+        //     var parentPath = module.parent.filename.split('/');
+        //     parentPath.pop();
+        //     data = parentPath.join('/') + '/' + data;
+        // }
+        data = path.resolve(module.parent.filename, data)
 
         //Determine if data is pointing to a file or directory
         fs.stat(data, function(err, stats) {
@@ -140,11 +142,12 @@ function loadObject(data, callback) {
 function loadFile(file, callback) {
     callback = callback || function() {};
 
-    if (file.substr(0, 1) !== '/') {
-        var parentPath = module.parent.filename.split('/');
-        parentPath.pop();
-        file = parentPath.join('/') + '/' + file;
-    }
+    // if (file.substr(0, 1) !== '/') {
+    //     var parentPath = module.parent.filename.split('/');
+    //     parentPath.pop();
+    //     file = parentPath.join('/') + '/' + file;
+    // }
+    file = path.resolve(module.parent.filename, file)
 
     load(require(file), callback);
 }
@@ -162,11 +165,12 @@ function loadDir(dir, callback) {
     callback = callback || function() {};
 
     //Get the absolute dir path if a relative path was given
-    if (dir.substr(0, 1) !== '/') {
-        var parentPath = module.parent.filename.split('/');
-        parentPath.pop();
-        dir = parentPath.join('/') + '/' + dir;
-    }
+    // if (dir.substr(0, 1) !== '/') {
+    //     var parentPath = module.parent.filename.split('/');
+    //     parentPath.pop();
+    //     dir = parentPath.join('/') + '/' + dir;
+    // }
+    dir = path.resolve(module.parent.filename, dir)
 
     //Counters for managing callbacks
     var tasks = { total: 0, done: 0 };
