@@ -182,12 +182,17 @@ function loadDir(dir, callback) {
         tasks.total = files.length;
 
         files.forEach(function(file) {
-            loadFile(dir + '/' + file, function(err) {
-                if (err) return callback(err);
+            if(path.extname(file) === '.js') {
+                loadFile(dir + '/' + file, function(err) {
+                    if (err) return callback(err);
 
+                    tasks.done++;
+                    if (tasks.total == tasks.done) callback();
+                });
+            } else {
                 tasks.done++;
                 if (tasks.total == tasks.done) callback();
-            });
+            }
         });
     });
 };
