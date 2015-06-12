@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "async": "0.1.x",
-    "mongoose": "3.2.x",
+    "mongoose": "3.9.7",
     "path": "^0.4.9"
   },
   "scripts": {
