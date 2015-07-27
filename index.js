@@ -1,7 +1,6 @@
 //Dependencies
 var fs          = require('fs'),
-    framework = require('digipolis-expressjs4'),
-    mongoose = framework.mongoose,
+    mongoose = require('astad-db').mongoose,
     path = require('path');
 
 
