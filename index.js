@@ -1,7 +1,8 @@
+'use strict';
+
 //Dependencies
-var fs          = require('fs'),
-    framework = require('digipolis-expressjs4'),
-    mongoose = framework.mongoose,
+var fs = require('fs'),
+    mongoose = require('mongoose'),
     path = require('path');
 
 
