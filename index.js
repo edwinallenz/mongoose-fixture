@@ -1,7 +1,8 @@
+'use strict';
+
 //Dependencies
-var fs          = require('fs'),
-    framework = require('digipolis-expressjs4'),
-    mongoose = framework.mongoose,
+var fs = require('fs'),
+    mongoose = require('mongoose'),
     path = require('path');
 
 
@@ -14,6 +15,7 @@ var fs          = require('fs'),
  * @param {Function}    Callback
  */
 var load = exports.load = function(data, callback) {
+
     if (typeof data == 'object') {
 
         loadObject(data, callback);
@@ -26,7 +28,7 @@ var load = exports.load = function(data, callback) {
         //     parentPath.pop();
         //     data = parentPath.join('/') + '/' + data;
         // }
-        data = path.resolve(module.parent.filename, data)
+        data = path.resolve(data)
 
         //Determine if data is pointing to a file or directory
         fs.stat(data, function(err, stats) {
@@ -65,39 +67,47 @@ function insertCollection(modelName, data, callback) {
 
     //Load model
     var Model = mongoose.model(modelName);
-
     //Clear existing collection
     Model.collection.remove(function(err) {
         if (err) return callback(err);
 
-        //Convert object to array
-        var items = [];
-        if (Array.isArray(data)) {
-            items = data;
-        } else {
-            for (var i in data) {
-                items.push(data[i]);
-            }
-        }
-
-        //Check number of tasks to run
-        if (items.length == 0) {
-            return callback();
-        } else {
-            tasks.total = items.length;
-        }
-
-        //Insert each item individually so we get Mongoose validation etc.
-        items.forEach(function(item) {
-            var doc = new Model(item);
+        data[modelName].forEach(function(fixture){
+            var doc = new Model(fixture);
             doc.save(function(err) {
                 if (err) return callback(err);
-
-                //Check if task queue is complete
-                tasks.done++;
-                if (tasks.done == tasks.total) callback();
+                callback();
             });
-        });
+
+        })
+        // //Convert object to array
+        // var items = [];
+        // if (Array.isArray(data)) {
+        //     items = data;
+        // } else {
+        //     for (var i in data) {
+        //         items.push(data[i]);
+        //     }
+        // }
+        // //Check number of tasks to run
+        // if (items.length == 0) {
+        //     return callback();
+        // } else {
+        //     tasks.total = items.length;
+        // }
+
+        //Insert each item individually so we get Mongoose validation etc.
+        // items.forEach(function(item) {
+        //     var doc = new Model(data);
+        //     doc.save(function(err) {
+        //         if (err) return callback(err);
+        //         console.log(data,'savedddddddddddddddddddddddddddddd',err);
+                
+
+        //         //Check if task queue is complete
+        //         tasks.done++;
+        //         if (tasks.done == tasks.total) callback();
+        //     });
+        // });
     });
 }
 
@@ -116,18 +126,24 @@ function loadObject(data, callback) {
     var tasks = { total: 0, done: 0 };
 
     //Go through each model's data
-    for (var modelName in data) {
-        (function() {
-            tasks.total++;
+    var models = Object.keys(data);
 
-            insertCollection(modelName, data[modelName], function(err) {
-                if (err) throw(err);
+    models.forEach(function(modelName){
+            (function() {
+                tasks.total++;
 
-                tasks.done++;
-                if (tasks.done == tasks.total) callback();
-            });
-        })();
-    }
+                insertCollection(modelName, data, function(err) {
+                    
+                    if (err)
+                    {
+                        console.log(err.message)
+                        throw(err);
+                    }
+                    tasks.done++;
+                    if (tasks.done == tasks.total) callback();
+                });
+            })();
+    });
 }
 
 
