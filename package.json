@@ -34,10 +34,15 @@
   "dependencies": {
     "async": "0.1.x",
     "mongoose": "3.9.7",
-    "path": "^0.4.9"
+    "path": "^0.4.9",
+    "underscore": "^1.8.3"
   },
   "scripts": {
     "test": "make test"
   },
-  "main": "mongoose_fixtures.js"
+  "main": "mongoose_fixtures.js",
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "expect": "^1.14.0"
+  }
 }

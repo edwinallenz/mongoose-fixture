@@ -3,7 +3,10 @@
 //Dependencies
 var fs = require('fs'),
     mongoose = require('mongoose'),
-    path = require('path');
+    path = require('path'),
+    async = require('async'),
+    _ = require('underscore');
+
 
 
 /**
@@ -18,9 +21,10 @@ var load = exports.load = function(data, callback) {
 
     if (typeof data == 'object') {
 
-        loadObject(data, callback);
+        loadObject(data, callback)
 
     } else if (typeof data == 'string') {
+
 
         //Get the absolute dir path if a relative path was given
         // if (data.substr(0, 1) !== '/') {
@@ -28,6 +32,7 @@ var load = exports.load = function(data, callback) {
         //     parentPath.pop();
         //     data = parentPath.join('/') + '/' + data;
         // }
+
         data = path.resolve(data)
 
         //Determine if data is pointing to a file or directory
@@ -35,15 +40,16 @@ var load = exports.load = function(data, callback) {
             if (err) throw err;
 
             if (stats.isDirectory()) {
-                loadDir(data, callback);
+
+               loadDir(data, callback);
             } else { //File
-                loadFile(data, callback);
+               loadFile(data, callback);
             }
         });
 
     } else { //Unsupported type
 
-        callback(new Error('Data must be an object, array or string (file or dir path)'));
+       return callback(new Error('Data must be an object, array or string (file or dir path)'));
 
     }
 }
@@ -71,43 +77,13 @@ function insertCollection(modelName, data, callback) {
     Model.collection.remove(function(err) {
         if (err) return callback(err);
 
-        data[modelName].forEach(function(fixture){
+        data.forEach(function(fixture){
             var doc = new Model(fixture);
             doc.save(function(err) {
-                if (err) return callback(err);
-                callback();
+                callback(err);
             });
 
         })
-        // //Convert object to array
-        // var items = [];
-        // if (Array.isArray(data)) {
-        //     items = data;
-        // } else {
-        //     for (var i in data) {
-        //         items.push(data[i]);
-        //     }
-        // }
-        // //Check number of tasks to run
-        // if (items.length == 0) {
-        //     return callback();
-        // } else {
-        //     tasks.total = items.length;
-        // }
-
-        //Insert each item individually so we get Mongoose validation etc.
-        // items.forEach(function(item) {
-        //     var doc = new Model(data);
-        //     doc.save(function(err) {
-        //         if (err) return callback(err);
-        //         console.log(data,'savedddddddddddddddddddddddddddddd',err);
-                
-
-        //         //Check if task queue is complete
-        //         tasks.done++;
-        //         if (tasks.done == tasks.total) callback();
-        //     });
-        // });
     });
 }
 
@@ -119,30 +95,21 @@ function insertCollection(modelName, data, callback) {
  *                          { User: [{name: 'Alex'}, {name: 'Bob'}] }
  * @param {Function}    Callback
  */
+
 function loadObject(data, callback) {
     callback = callback || function() {};
 
-    //Counters for managing callbacks
-    var tasks = { total: 0, done: 0 };
-
     //Go through each model's data
-    var models = Object.keys(data);
-
-    models.forEach(function(modelName){
-            (function() {
-                tasks.total++;
-
-                insertCollection(modelName, data, function(err) {
-                    
-                    if (err)
-                    {
-                        console.log(err.message)
-                        throw(err);
-                    }
-                    tasks.done++;
-                    if (tasks.done == tasks.total) callback();
-                });
-            })();
+    console.dir(data)
+    async.forEach(Object.keys(data), function( item, next){
+        insertCollection(item, data[item], function(err) {
+            if (err) {
+                throw(err);
+            }
+            next()
+        });
+    }, function(err){
+        callback()
     });
 }
 
