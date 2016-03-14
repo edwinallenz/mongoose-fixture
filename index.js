@@ -3,7 +3,10 @@
 //Dependencies
 var fs = require('fs'),
     mongoose = require('mongoose'),
-    path = require('path');
+    path = require('path'),
+    async = require('async'),
+    _ = require('underscore');
+
 
 
 /**
@@ -15,11 +18,13 @@ var fs = require('fs'),
  * @param {Function}    Callback
  */
 var load = exports.load = function(data, callback) {
+
     if (typeof data == 'object') {
 
-        loadObject(data, callback);
+        loadObject(data, callback)
 
     } else if (typeof data == 'string') {
+
 
         //Get the absolute dir path if a relative path was given
         // if (data.substr(0, 1) !== '/') {
@@ -27,16 +32,18 @@ var load = exports.load = function(data, callback) {
         //     parentPath.pop();
         //     data = parentPath.join('/') + '/' + data;
         // }
-        data = path.resolve(module.parent.filename, data)
+
+        data = path.resolve(data)
 
         //Determine if data is pointing to a file or directory
         fs.stat(data, function(err, stats) {
             if (err) throw err;
 
             if (stats.isDirectory()) {
-                loadDir(data, callback);
+
+               loadDir(data, callback);
             } else { //File
-                loadFile(data, callback);
+               loadFile(data, callback);
             }
         });
 

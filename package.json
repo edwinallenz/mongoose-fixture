@@ -1,5 +1,5 @@
 {
-  "name": "mongoose-fixtures",
+  "name": "digipolis-mongoose-fixtures",
   "description": "Fixture loading for Mongoose on NodeJS",
   "maintainers": [
     {
@@ -33,11 +33,16 @@
   ],
   "dependencies": {
     "async": "0.1.x",
-    "mongoose": "^4.2.2",
-    "path": "^0.4.9"
+    "mongoose": "3.9.7",
+    "path": "^0.4.9",
+    "underscore": "^1.8.3"
   },
   "scripts": {
     "test": "make test"
   },
-  "main": "mongoose_fixtures.js"
+  "main": "mongoose_fixtures.js",
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "expect": "^1.14.0"
+  }
 }
