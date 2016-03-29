@@ -120,23 +120,20 @@ function insertCollection(modelName, data, callback) {
 function loadObject(data, callback) {
     callback = callback || function() {};
 
-    //Counters for managing callbacks
-    var tasks = { total: 0, done: 0 };
-
     //Go through each model's data
-    for (var modelName in data) {
-        (function() {
-            tasks.total++;
-
-            insertCollection(modelName, data[modelName], function(err) {
-                if (err) throw(err);
-
-                tasks.done++;
-                if (tasks.done == tasks.total) callback();
-            });
-        })();
-    }
+    async.forEach(Object.keys(data), function( item, next){
+        console.info('Loading fixtures', item)
+        insertCollection(item, data[item], function(err) {
+            if (err) {
+                throw(err);
+            }
+            next()
+        });
+    }, function(err){
+        callback()
+    });
 }
+
 
 
 /**
