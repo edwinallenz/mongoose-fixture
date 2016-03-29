@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "async": "0.1.x",
-    "mongoose": "3.9.7",
+    "mongoose": "4.x",
     "path": "^0.4.9",
     "underscore": "^1.8.3"
   },
